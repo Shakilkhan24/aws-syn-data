@@ -5,6 +5,7 @@ from google import genai
 from tqdm import tqdm
 from dotenv import load_dotenv
 import os
+import sys
 
 # ----------------- LOAD ENV -----------------
 load_dotenv()
@@ -110,7 +111,11 @@ def process_csv(file_path, client_manager):
 # ----------------- ENTRY POINT -----------------
 
 def main():
-    csv_file = input("Enter CSV file name (e.g., input.csv): ").strip()
+    if len(sys.argv) < 2:
+        print("Usage: python a.py <csv_file>")
+        return
+
+    csv_file = sys.argv[1]
     file_path = Path(__file__).parent / csv_file
 
     if not file_path.exists():
