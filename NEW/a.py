@@ -26,7 +26,7 @@ text:
     }
 ]
 
-SNAPSHOT_SIZE = 50
+SNAPSHOT_SIZE = 100
 
 # ----------------- API CLIENT MANAGER -----------------
 
