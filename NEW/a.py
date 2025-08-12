@@ -13,32 +13,16 @@ API_KEYS = os.getenv("API_KEYS").split(",")
 
 TASKS = [
     {
-        "input_column": "Question",
-        "output_column": "Ques_Bangla",
+        "input_column": "text",
+        "output_column": "trans_bangla",
         "prompt_template": """এই ইংরেজি টেক্সটটি বাংলায় অনুবাদ করুন, কিন্তু মেডিক্যাল শব্দ বা টার্মগুলো ইংরেজিতেই রাখুন।  
 শুধুমাত্র অনুবাদিত পাঠ্য দিন, কোনো অতিরিক্ত কথা যোগ করবেন না।
 text:
 {}"""
-    },
-    {
-        "input_column": "Complex_CoT",
-        "output_column": "C_COT_BN",
-        "prompt_template": """এই ইংরেজি টেক্সটটি বাংলায় অনুবাদ করুন, কিন্তু মেডিক্যাল শব্দ বা টার্মগুলো ইংরেজিতেই রাখুন।  
-শুধুমাত্র অনুবাদিত পাঠ্য দিন, কোনো অতিরিক্ত কথা যোগ করবেন না।
-text:
-{}"""
-    },
-    {
-        "input_column": "Response",
-        "output_column": "RS_BN",
-        "prompt_template": """এই ইংরেজি টেক্সটটি বাংলায় অনুবাদ করুন, কিন্তু মেডিক্যাল শব্দ বা টার্মগুলো ইংরেজিতেই রাখুন।  
-শুধুমাত্র অনুবাদিত পাঠ্য দিন, কোনো অতিরিক্ত কথা যোগ করবেন না।
-text:
-{}"""
-    },
+    }
 ]
 
-SNAPSHOT_SIZE = 3
+SNAPSHOT_SIZE = 50
 
 # ----------------- API CLIENT MANAGER -----------------
 
