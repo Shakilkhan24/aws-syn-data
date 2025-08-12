@@ -13,7 +13,7 @@ API_KEYS = os.getenv("API_KEYS").split(",")
 
 TASKS = [
     {
-        "input_column": "content",
+        "input_column": "text",
         "output_column": "trans_bangla",
         "prompt_template": """নিচের ইংরেজি গল্পটি বাংলায় অনুবাদ করুন একজন অভিজ্ঞ বাঙালি সাহিত্যিকের মতো।  
 শিশুদের উপযোগী সরল অথচ হৃদয়স্পর্শী ভাষা ব্যবহার করুন, যাতে গল্পের আবেগ, দৃশ্যপট, ও কল্পনার রঙ অক্ষুণ্ণ থাকে।  
