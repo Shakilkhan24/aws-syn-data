@@ -68,6 +68,9 @@ def generate_content(client_manager, prompt):
 
 # ----------------- PROCESSING -----------------
 
+def is_empty_or_nan(value):
+    return pd.isna(value) or pd.isnull(value) or (isinstance(value, str) and value.strip() == "")
+
 def process_csv(file_path, client_manager):
     df = pd.read_csv(file_path)
 
@@ -78,7 +81,7 @@ def process_csv(file_path, client_manager):
     # Resume: find first unprocessed row
     start_idx = 0
     for idx, row in df.iterrows():
-        incomplete = any(pd.isna(row[task["output_column"]]) or pd.isnull(row[task["output_column"]]) for task in TASKS)
+        incomplete = any(is_empty_or_nan(row[task["output_column"]]) for task in TASKS)
         if incomplete:
             start_idx = idx
             break
@@ -91,7 +94,7 @@ def process_csv(file_path, client_manager):
     for idx in tqdm(range(start_idx, len(df)), desc="Processing rows"):
         row = df.iloc[idx]
         for task in TASKS:
-            if pd.isna(row[task["output_column"]]) or pd.isnull(row[task["output_column"]]):
+            if is_empty_or_nan(row[task["output_column"]]):
                 input_text = row[task["input_column"]]
                 prompt = task["prompt_template"].format(input_text)
                 output = generate_content(client_manager, prompt)
