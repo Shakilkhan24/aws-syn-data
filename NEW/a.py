@@ -1,17 +1,17 @@
 import pandas as pd
-from pathlib import Path
 import time
+import os
+import sys
 from google import genai
 from tqdm import tqdm
 from dotenv import load_dotenv
-import os
-import sys
+from pathlib import Path
 
 # ----------------- LOAD ENV -----------------
 load_dotenv()
 
 API_KEYS = os.getenv("API_KEYS").split(",")
-
+SNAPSHOT_SIZE = 100
 TASKS = [
     {
         "input_column": "text",
@@ -27,8 +27,6 @@ TASKS = [
     }
 ]
 
-SNAPSHOT_SIZE = 100
-
 # ----------------- API CLIENT MANAGER -----------------
 
 class GenAIClientManager:
@@ -38,7 +36,11 @@ class GenAIClientManager:
         self.client = self._create_client(self.api_keys[self.index])
 
     def _create_client(self, api_key):
-        return genai.Client(api_key=api_key)
+        try:
+            return genai.Client(api_key=api_key)
+        except Exception as e:
+            print(f"Error creating client with API key {api_key}: {e}")
+            return None
 
     def get_client(self):
         return self.client
@@ -55,21 +57,24 @@ class GenAIClientManager:
 def generate_content(client_manager, prompt):
     while True:
         client = client_manager.get_client()
+        if client is None:
+            print("No valid API client available.")
+            return None
         try:
             response = client.models.generate_content(
                 model="gemini-2.5-flash",
                 contents=prompt
             )
             return response.text
-        except Exception as e:
+        except genai.errors.ClientError as e:
             print(f"API error: {e}. Switching key...")
             client_manager.switch_key()
             time.sleep(1)
+        except Exception as e:
+            print(f"Unexpected error: {e}.")
+            return None
 
 # ----------------- PROCESSING -----------------
-
-def is_empty_or_nan(value):
-    return pd.isna(value) or pd.isnull(value) or (isinstance(value, str) and value.strip() == "")
 
 def process_csv(file_path, client_manager):
     df = pd.read_csv(file_path)
@@ -78,10 +83,9 @@ def process_csv(file_path, client_manager):
         if task["output_column"] not in df.columns:
             df[task["output_column"]] = None
 
-    # Resume: find first unprocessed row
     start_idx = 0
     for idx, row in df.iterrows():
-        incomplete = any(is_empty_or_nan(row[task["output_column"]]) for task in TASKS)
+        incomplete = any(pd.isna(row[task["output_column"]]) for task in TASKS)
         if incomplete:
             start_idx = idx
             break
@@ -94,20 +98,19 @@ def process_csv(file_path, client_manager):
     for idx in tqdm(range(start_idx, len(df)), desc="Processing rows"):
         row = df.iloc[idx]
         for task in TASKS:
-            if is_empty_or_nan(row[task["output_column"]]):
+            if pd.isna(row[task["output_column"]]):
                 input_text = row[task["input_column"]]
                 prompt = task["prompt_template"].format(input_text)
                 output = generate_content(client_manager, prompt)
-                df.at[idx, task["output_column"]] = output
+                if output:
+                    df.at[idx, task["output_column"]] = output
 
-        # Save snapshot every SNAPSHOT_SIZE rows
         if (idx + 1) % SNAPSHOT_SIZE == 0:
             snapshot_file = f"batch_{idx + 1}.csv"
             df.to_csv(snapshot_file, index=False, encoding='utf-8-sig')
             print(f"Snapshot saved: {snapshot_file}")
 
-    # Final save
-    final_file = f"final_output.csv"
+    final_file = "final_output.csv"
     df.to_csv(final_file, index=False, encoding='utf-8-sig')
     print(f"Final output saved: {final_file}")
 
