@@ -1,16 +1,13 @@
 from datasets import load_dataset
 import pandas as pd
 
-from datasets import load_dataset
+# Load dataset
+ds = load_dataset("Shakil2448868/bangla-songs-synthetic-prompt")
 
-# Load only the first 3000 rows
-ds = load_dataset(
-    "ajibawa-2023/Children-Stories-Collection",
-    split="train[:10000]"
-)
-print(ds)
-# Suppose it has a 'train' split:
-df = ds.to_pandas()
+print(ds)  # This will show available splits (e.g., 'train')
+
+# Convert the 'train' split to pandas DataFrame
+df = ds["train"].to_pandas()
 
 # Save to CSV
-df.to_csv("story_collection.csv", index=False, encoding='utf-8-sig')
+df.to_csv("song.csv", index=False, encoding='utf-8-sig')
