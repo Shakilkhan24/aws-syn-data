@@ -6,8 +6,8 @@ import os
 # -------------------------
 # 1. Config
 # -------------------------
-CSV_FILE = "final_data.csv"  # your local CSV file
-HF_DATASET_NAME = "Shakil2448868/Bangla-Stories"  # Change to your HF repo name
+CSV_FILE = "final_song_cleaned.csv"  # your local CSV file
+HF_DATASET_NAME = "Shakil2448868/Bangla-synthetic-song-generation"  # Change to your HF repo name
 HF_TOKEN = os.getenv("HF_TOKEN")  # or put your token here directly
 
 # -------------------------
@@ -23,7 +23,7 @@ login(token=HF_TOKEN)
 df = pd.read_csv(CSV_FILE)
 
 # Keep only desired columns
-df = df[["text", "trans_bangla"]]
+# df = df[["text", "trans_bangla"]]
 
 # Reset index
 df.reset_index(drop=True, inplace=True)

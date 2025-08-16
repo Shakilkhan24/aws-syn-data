@@ -1,12 +1,13 @@
 import pandas as pd
 
 # Read your CSV
-df = pd.read_csv("batch_1100.csv")
+df = pd.read_csv("final_song_output.csv")
 
-# Keep only rows where 'trans_bangla' is not NaN
-df_filtered = df[df["trans_bangla"].notna()]
+# Drop 'syn_prompt', keep only required columns, and rename 'new_song'
+new_df = df.drop(columns=["syn_prompt"])[["Writer", "Title", "Song", "new_song"]].rename(
+    columns={"new_song": "newly_generated_song"}
+)
 
-# Save to a new CSV
-df_filtered.to_csv("final_data.csv", index=False)
+# Save to CSV
+new_df.to_csv("final_song_cleaned.csv", index=False, encoding="utf-8-sig")
 
-print(f"Saved {len(df_filtered)} rows to new.csv")
