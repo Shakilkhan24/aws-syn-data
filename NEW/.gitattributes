@@ -1,0 +1,2 @@
+*.csv filter=lfs diff=lfs merge=lfs -text
+medical_data_split_*.csv filter=lfs diff=lfs merge=lfs -text
