@@ -13,20 +13,51 @@ load_dotenv()
 
 API_KEYS = os.getenv("API_KEYS").split(",")
 BATCH_SIZE = 100
-PROGRESS_FILE = "processing_progress.json"
+
+# Tasks for medical-o1-reasoning-SFT dataset
 TASKS = [
     {
-        "input_column": "Song",
-        "output_column": "new_song",
-        "prompt_template": """নিচে একটি গান দেওয়া হলো। আপনার কাজ হলো এই গানটির মূল ভাব, আবেগ এবং বিষয়বস্তুকে অনুপ্রেরণা হিসেবে ব্যবহার করে একটি সম্পূর্ণ নতুন ও মৌলিক গান রচনা করা।
+        "input_column": "Question",
+        "output_column": "Question_Bangla",
+        "prompt_template": """আপনি একজন দক্ষ চিকিৎসা অনুবাদক। নিচে একটি ইংরেজি চিকিৎসা প্রশ্ন দেওয়া হয়েছে। আপনার কাজ হলো এই প্রশ্নটিকে সঠিক ও স্পষ্ট বাংলায় অনুবাদ করা।
 
-নতুন গানটি যেন প্রদত্ত গানের মতো আবেগ ও বার্তা বহন করে, কিন্তু এর শব্দচয়ন, চিত্রকল্প, এবং গানের গঠন সম্পূর্ণ আলাদা হবে।  
-এটি হবে এমন একটি সৃষ্টি, যা অনুপ্রাণিত হলেও স্বতন্ত্র এবং নতুন মনে হবে।  
+গুরুত্বপূর্ণ নির্দেশনা:
+- চিকিৎসা পরিভাষাগুলি যথাযথভাবে বাংলায় রূপান্তর করুন
+- অর্থের কোন বিকৃতি না ঘটিয়ে অনুবাদ করুন
+- প্রশ্নের মূল ভাব ও উদ্দেশ্য অক্ষুণ্ণ রাখুন
+- শুধুমাত্র অনুবাদিত প্রশ্নটি প্রদান করুন, অতিরিক্ত কিছু যোগ করবেন না
 
-একজন দক্ষ গীতিকারের মতো কাব্যিক, শ্রুতিমধুর এবং আবেগঘন শব্দ ব্যবহার করে গানটি লিখুন।  
-কোনো অতিরিক্ত ব্যাখ্যা বা মন্তব্য যোগ করবেন না। শুধুমাত্র আপনার লেখা নতুন গানটি প্রদান করুন।
+ইংরেজি প্রশ্ন:
+{}"""
+    },
+    {
+        "input_column": "Complex_CoT",
+        "output_column": "Complex_CoT_Bangla", 
+        "prompt_template": """আপনি একজন দক্ষ চিকিৎসা অনুবাদক। নিচে একটি ইংরেজি চিকিৎসা যুক্তিক্রম (reasoning process) দেওয়া হয়েছে। আপনার কাজ হলো এই পুরো যুক্তিক্রমটিকে সঠিক ও স্পষ্ট বাংলায় অনুবাদ করা।
 
-প্রদত্ত গান:
+গুরুত্বপূর্ণ নির্দেশনা:
+- চিকিৎসা পরিভাষাগুলি যথাযথভাবে বাংলায় রূপান্তর করুন
+- চিন্তা প্রক্রিয়ার ধাপগুলো স্পষ্ট রাখুন
+- যুক্তির ধারাবাহিকতা বজায় রাখুন
+- অনানুষ্ঠানিক ভাষার অংশগুলো (যেমন "Okay", "Hmm") প্রাকৃতিক বাংলায় রূপান্তর করুন
+- শুধুমাত্র অনুবাদিত যুক্তিক্রমটি প্রদান করুন, অতিরিক্ত কিছু যোগ করবেন না
+
+ইংরেজি যুক্তিক্রম:
+{}"""
+    },
+    {
+        "input_column": "Response",
+        "output_column": "Response_Bangla",
+        "prompt_template": """আপনি একজন দক্ষ চিকিৎসা অনুবাদক। নিচে একটি ইংরেজি চিকিৎসা উত্তর দেওয়া হয়েছে। আপনার কাজ হলো এই উত্তরটিকে সঠিক ও স্পষ্ট বাংলায় অনুবাদ করা।
+
+গুরুত্বপূর্ণ নির্দেশনা:
+- চিকিৎসা পরিভাষাগুলি যথাযথভাবে বাংলায় রূপান্তর করুন
+- উত্তরের গঠন ও বিন্যাস বজায় রাখুন
+- প্রযুক্তিগত তথ্যের যথার্থতা নিশ্চিত করুন
+- উত্তরের চূড়ান্ত সিদ্ধান্ত স্পষ্ট রাখুন
+- শুধুমাত্র অনুবাদিত উত্তরটি প্রদান করুন, অতিরিক্ত কিছু যোগ করবেন না
+
+ইংরেজি উত্তর:
 {}"""
     }
 ]
@@ -35,8 +66,10 @@ TASKS = [
 # ----------------- PROGRESS MANAGER -----------------
 
 class ProgressManager:
-    def __init__(self, progress_file=PROGRESS_FILE):
-        self.progress_file = progress_file
+    def __init__(self, csv_filename):
+        # Create progress file name based on CSV filename
+        csv_stem = Path(csv_filename).stem
+        self.progress_file = f"{csv_stem}_processing_progress.json"
         self.progress_data = self.load_progress()
 
     def load_progress(self):
@@ -46,7 +79,7 @@ class ProgressManager:
                     return json.load(f)
             return {"current_batch": 0, "completed_rows": 0, "total_rows": 0}
         except Exception as e:
-            print(f"Error loading progress: {e}")
+            print(f"Error loading progress from {self.progress_file}: {e}")
             return {"current_batch": 0, "completed_rows": 0, "total_rows": 0}
 
     def save_progress(self, current_batch, completed_rows, total_rows):
@@ -59,7 +92,7 @@ class ProgressManager:
             with open(self.progress_file, 'w', encoding='utf-8') as f:
                 json.dump(self.progress_data, f, ensure_ascii=False, indent=2)
         except Exception as e:
-            print(f"Error saving progress: {e}")
+            print(f"Error saving progress to {self.progress_file}: {e}")
 
     def get_resume_point(self):
         return self.progress_data["current_batch"], self.progress_data["completed_rows"]
@@ -68,8 +101,9 @@ class ProgressManager:
         try:
             if os.path.exists(self.progress_file):
                 os.remove(self.progress_file)
+                print(f"🧹 Progress file {self.progress_file} cleaned up.")
         except Exception as e:
-            print(f"Error cleaning up progress file: {e}")
+            print(f"Error cleaning up progress file {self.progress_file}: {e}")
 
 
 # ----------------- API CLIENT MANAGER -----------------
@@ -83,7 +117,7 @@ class GenAIClientManager:
         self.key_usage_stats = {name: 0 for name in self.key_names}
         self.failed_keys = set()
         
-        print(f"🔑 Initialized with {len(self.api_keys)} API keys")
+        print(f"🔑 Initialized with {len(self.api_keys)} API keys from .env file")
         self.client = self._create_client(self.api_keys[self.index])
 
     def _create_client(self, api_key):
@@ -225,8 +259,12 @@ def get_working_file_path(original_file):
     return working_file
 
 def process_csv_in_batches(file_path, client_manager):
-    progress_manager = ProgressManager()
+    """Process a single CSV file with its own progress tracking"""
+    progress_manager = ProgressManager(file_path.name)
     working_file = get_working_file_path(file_path)
+    
+    print(f"\n📂 Processing: {file_path.name}")
+    print(f"📊 Progress file: {progress_manager.progress_file}")
     
     # Load the working file
     df = pd.read_csv(working_file)
@@ -270,7 +308,7 @@ def process_csv_in_batches(file_path, client_manager):
                 for task in TASKS:
                     if pd.isna(row[task["output_column"]]) or row[task["output_column"]] == "":
                         input_text = row[task["input_column"]]
-                        if pd.notna(input_text) and input_text.strip():
+                        if pd.notna(input_text) and str(input_text).strip():
                             prompt = task["prompt_template"].format(input_text)
                             output = generate_content(client_manager, prompt)
                             if output:
@@ -284,7 +322,8 @@ def process_csv_in_batches(file_path, client_manager):
                 time.sleep(0.1)
             
             # Save batch completion
-            batch_file = f"batch_{batch_num + 1}_complete.csv"
+            csv_stem = file_path.stem
+            batch_file = f"{csv_stem}_batch_{batch_num + 1}_complete.csv"
             df.to_csv(batch_file, index=False, encoding='utf-8-sig')
             
             # Update working file
@@ -303,53 +342,126 @@ def process_csv_in_batches(file_path, client_manager):
             progress_manager.save_progress(batch_num + 1, batch_end - 1, total_rows)
     
     except KeyboardInterrupt:
-        print("\n⏸️ Processing interrupted by user. Progress has been saved.")
+        print(f"\n⏸️ Processing interrupted by user for {file_path.name}. Progress has been saved.")
         df.to_csv(working_file, index=False, encoding='utf-8-sig')
         print(f"💾 Current progress saved to: {working_file}")
-        client_manager.print_usage_stats()
-        return
+        return False  # Signal interruption
     
     except Exception as e:
-        print(f"\n❌ Error during processing: {e}")
+        print(f"\n❌ Error during processing {file_path.name}: {e}")
         df.to_csv(working_file, index=False, encoding='utf-8-sig')
         print(f"💾 Current progress saved to: {working_file}")
-        client_manager.print_usage_stats()
-        return
+        return False  # Signal error
     
     # Processing completed successfully
-    final_file = file_path.with_name(f"final_{file_path.stem}_output.csv")
+    final_file = file_path.with_name(f"final_{file_path.stem}_bangla_output.csv")
     df.to_csv(final_file, index=False, encoding='utf-8-sig')
-    print(f"\n🎉 All processing completed! Final output saved: {final_file}")
+    print(f"\n🎉 Processing completed for {file_path.name}! Final output saved: {final_file}")
     
-    # Show final API usage statistics
-    client_manager.print_usage_stats()
-    
-    # Clean up progress file
+    # Clean up progress file for this CSV
     progress_manager.cleanup()
-    print("🧹 Progress tracking cleaned up.")
+    return True  # Signal success
+
+def process_multiple_csvs(csv_files, client_manager):
+    """Process multiple CSV files sequentially"""
+    total_files = len(csv_files)
+    completed_files = 0
+    failed_files = []
+    
+    print(f"\n🚀 Starting batch processing of {total_files} CSV files...")
+    print("=" * 60)
+    
+    for i, csv_file in enumerate(csv_files, 1):
+        print(f"\n📋 File {i}/{total_files}: {csv_file.name}")
+        print("─" * 40)
+        
+        try:
+            success = process_csv_in_batches(csv_file, client_manager)
+            if success:
+                completed_files += 1
+                print(f"✅ Successfully completed: {csv_file.name}")
+            else:
+                failed_files.append(csv_file.name)
+                print(f"❌ Failed to complete: {csv_file.name}")
+                
+        except Exception as e:
+            print(f"❌ Fatal error processing {csv_file.name}: {e}")
+            failed_files.append(csv_file.name)
+    
+    # Final summary
+    print("\n" + "=" * 60)
+    print("📊 FINAL PROCESSING SUMMARY")
+    print("=" * 60)
+    print(f"Total files: {total_files}")
+    print(f"Successfully completed: {completed_files}")
+    print(f"Failed: {len(failed_files)}")
+    
+    if failed_files:
+        print(f"\n❌ Failed files:")
+        for file in failed_files:
+            print(f"  - {file}")
+    
+    print(f"\n📈 API Usage Summary:")
+    client_manager.print_usage_stats()
 
 # ----------------- ENTRY POINT -----------------
 
 def main():
     if len(sys.argv) < 2:
-        print("Usage: python script.py <csv_file>")
-        print("Example: python script.py songs.csv")
+        print("Usage: python script.py <csv_file1> [csv_file2] [csv_file3] ...")
+        print("Example: python script.py medical-o1-reasoning-SFT.csv another_dataset.csv")
+        print("Example: python script.py *.csv  # Process all CSV files in current directory")
+        print("\nAPI Key Management:")
+        print("- Modify the .env file to set which API keys this terminal should use")
+        print("- Each terminal can have different API keys by using different .env files")
+        print("- The script will rotate through all keys specified in API_KEYS")
         return
 
-    csv_file = sys.argv[1]
-    file_path = Path(__file__).parent / csv_file
-
-    if not file_path.exists():
-        print(f"❌ File not found: {file_path}")
+    # Collect all CSV files
+    csv_files = []
+    for arg in sys.argv[1:]:
+        file_path = Path(__file__).parent / arg
+        if file_path.exists() and file_path.suffix.lower() == '.csv':
+            csv_files.append(file_path)
+        else:
+            print(f"⚠️ Skipping non-existent or non-CSV file: {arg}")
+    
+    if not csv_files:
+        print("❌ No valid CSV files found!")
         return
 
-    print(f"📂 Processing file: {file_path}")
-    print(f"📊 Batch size: {BATCH_SIZE} rows")
+    print(f"📂 Found {len(csv_files)} CSV file(s) to process:")
+    for i, csv_file in enumerate(csv_files, 1):
+        # Load to check row count
+        try:
+            df = pd.read_csv(csv_file)
+            row_count = len(df)
+            print(f"  {i}. {csv_file.name} ({row_count:,} rows)")
+        except Exception as e:
+            print(f"  {i}. {csv_file.name} (⚠️ Error reading: {e})")
+    
+    print(f"\n📊 Batch size: {BATCH_SIZE} rows")
     print(f"🔑 Available API keys: {len(API_KEYS)}")
+    print(f"🌏 Target language: Bangla")
+    print(f"📝 Columns to translate: Question, Complex_CoT, Response")
+    
+    # Ask for confirmation if multiple files
+    if len(csv_files) > 1:
+        response = input(f"\nProceed with processing {len(csv_files)} files? (y/N): ").strip().lower()
+        if response not in ['y', 'yes']:
+            print("Processing cancelled.")
+            return
 
     try:
         client_manager = GenAIClientManager(API_KEYS)
-        process_csv_in_batches(file_path, client_manager)
+        
+        if len(csv_files) == 1:
+            # Single file processing
+            process_csv_in_batches(csv_files[0], client_manager)
+        else:
+            # Multiple file processing
+            process_multiple_csvs(csv_files, client_manager)
+            
     except Exception as e:
         print(f"❌ Fatal error: {e}")
 
