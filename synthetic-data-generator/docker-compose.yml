@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  synthetic-data-generator:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: synthetic-data-generator:latest
+    container_name: synthetic-data-gen
+    volumes:
+      # Mount data directories
+      - ./data:/app/data
+      # Mount configs directory
+      - ./configs:/app/configs
+      # Mount logs directory
+      - ./logs:/app/logs
+      # Mount .env file (optional, can also use environment variables)
+      - ./.env:/app/.env:ro
+    environment:
+      # Environment variables can be set here or in .env file
+      - PYTHONUNBUFFERED=1
+    # Override default command
+    command: ["python", "-m", "src.cli.main", "--help"]
+    # Keep container running (useful for interactive use)
+    stdin_open: true
+    tty: true
+

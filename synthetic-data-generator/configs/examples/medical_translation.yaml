@@ -1,0 +1,41 @@
+# Example configuration for medical data translation
+
+api:
+  provider: gemini
+  model: gemini-2.5-flash
+  keys: ${API_KEYS}
+
+processing:
+  batch_size: 100
+  save_interval: 1
+  retry_delay: 0.1
+  max_retries: 3
+
+tasks:
+  - name: translate_question
+    input_column: Question
+    output_column: Question_Bangla
+    prompt_template: |
+      Translate the following medical question to Bangla. Maintain medical terminology accuracy.
+      
+      English Question:
+      {input}
+
+  - name: translate_reasoning
+    input_column: Complex_CoT
+    output_column: Complex_CoT_Bangla
+    prompt_template: |
+      Translate the following medical reasoning chain to Bangla. Preserve the logical flow.
+      
+      English Reasoning:
+      {input}
+
+  - name: translate_response
+    input_column: Response
+    output_column: Response_Bangla
+    prompt_template: |
+      Translate the following medical response to Bangla. Maintain technical accuracy.
+      
+      English Response:
+      {input}
+

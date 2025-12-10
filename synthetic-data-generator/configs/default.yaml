@@ -1,0 +1,68 @@
+# Default configuration for Synthetic Data Generator
+
+api:
+  provider: gemini
+  model: gemini-2.5-flash
+  keys: ${API_KEYS}  # Comma-separated API keys from .env file
+  # Optional provider-specific parameters
+  # provider_kwargs:
+  #   temperature: 0.7
+  #   max_tokens: 2048
+
+processing:
+  batch_size: 100
+  save_interval: 1  # Save after every N batches
+  retry_delay: 0.1  # Delay between API requests (seconds)
+  max_retries: 3  # Maximum retries per request
+  save_interval_rows: 100  # Save checkpoint after every N rows (set to null to disable)
+  checkpoint_dir: data/checkpoints  # Directory for checkpoint saves
+
+# Tasks define what transformations to apply to each row
+tasks:
+  - name: translate_question
+    input_column: Question
+    output_column: Question_Bangla
+    prompt_template: |
+      আপনি একজন দক্ষ চিকিৎসা অনুবাদক। নিচে একটি ইংরেজি চিকিৎসা প্রশ্ন দেওয়া হয়েছে। আপনার কাজ হলো এই প্রশ্নটিকে সঠিক ও স্পষ্ট বাংলায় অনুবাদ করা।
+
+      গুরুত্বপূর্ণ নির্দেশনা:
+      - চিকিৎসা পরিভাষাগুলি যথাযথভাবে বাংলায় রূপান্তর করুন
+      - অর্থের কোন বিকৃতি না ঘটিয়ে অনুবাদ করুন
+      - প্রশ্নের মূল ভাব ও উদ্দেশ্য অক্ষুণ্ণ রাখুন
+      - শুধুমাত্র অনুবাদিত প্রশ্নটি প্রদান করুন, অতিরিক্ত কিছু যোগ করবেন না
+
+      ইংরেজি প্রশ্ন:
+      {input}
+
+  - name: translate_reasoning
+    input_column: Complex_CoT
+    output_column: Complex_CoT_Bangla
+    prompt_template: |
+      আপনি একজন দক্ষ চিকিৎসা অনুবাদক। নিচে একটি ইংরেজি চিকিৎসা যুক্তিক্রম (reasoning process) দেওয়া হয়েছে। আপনার কাজ হলো এই পুরো যুক্তিক্রমটিকে সঠিক ও স্পষ্ট বাংলায় অনুবাদ করা।
+
+      গুরুত্বপূর্ণ নির্দেশনা:
+      - চিকিৎসা পরিভাষাগুলি যথাযথভাবে বাংলায় রূপান্তর করুন
+      - চিন্তা প্রক্রিয়ার ধাপগুলো স্পষ্ট রাখুন
+      - যুক্তির ধারাবাহিকতা বজায় রাখুন
+      - অনানুষ্ঠানিক ভাষার অংশগুলো (যেমন "Okay", "Hmm") প্রাকৃতিক বাংলায় রূপান্তর করুন
+      - শুধুমাত্র অনুবাদিত যুক্তিক্রমটি প্রদান করুন, অতিরিক্ত কিছু যোগ করবেন না
+
+      ইংরেজি যুক্তিক্রম:
+      {input}
+
+  - name: translate_response
+    input_column: Response
+    output_column: Response_Bangla
+    prompt_template: |
+      আপনি একজন দক্ষ চিকিৎসা অনুবাদক। নিচে একটি ইংরেজি চিকিৎসা উত্তর দেওয়া হয়েছে। আপনার কাজ হলো এই উত্তরটিকে সঠিক ও স্পষ্ট বাংলায় অনুবাদ করা।
+
+      গুরুত্বপূর্ণ নির্দেশনা:
+      - চিকিৎসা পরিভাষাগুলি যথাযথভাবে বাংলায় রূপান্তর করুন
+      - উত্তরের গঠন ও বিন্যাস বজায় রাখুন
+      - প্রযুক্তিগত তথ্যের যথার্থতা নিশ্চিত করুন
+      - উত্তরের চূড়ান্ত সিদ্ধান্ত স্পষ্ট রাখুন
+      - শুধুমাত্র অনুবাদিত উত্তরটি প্রদান করুন, অতিরিক্ত কিছু যোগ করবেন না
+
+      ইংরেজি উত্তর:
+      {input}
+

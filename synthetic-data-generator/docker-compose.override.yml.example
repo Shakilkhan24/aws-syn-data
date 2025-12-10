@@ -1,0 +1,25 @@
+# Example override file for custom configurations
+# Copy this to docker-compose.override.yml and customize as needed
+
+version: '3.8'
+
+services:
+  synthetic-data-generator:
+    # Example: Override command for specific processing
+    # command: ["python", "-m", "src.cli.main", "--config", "configs/default.yaml", "data/input/file.csv"]
+    
+    # Example: Add more environment variables
+    # environment:
+    #   - API_KEYS=your_key_1,your_key_2
+    
+    # Example: Mount additional volumes
+    # volumes:
+    #   - ./custom_data:/app/custom_data
+    
+    # Example: Resource limits
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: '2'
+    #       memory: 4G
+

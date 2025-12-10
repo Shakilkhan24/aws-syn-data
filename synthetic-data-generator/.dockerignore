@@ -1,0 +1,58 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Data files (will be mounted as volumes)
+data/input/*
+data/output/*
+data/progress/*
+data/checkpoints/*
+data/snapshots/*
+logs/*
+
+# Keep directory structure
+!data/input/.gitkeep
+!data/output/.gitkeep
+!data/progress/.gitkeep
+!data/checkpoints/.gitkeep
+!data/snapshots/.gitkeep
+
+# Environment files (will be mounted)
+.env
+.env.local
+
+# Git
+.git/
+.gitignore
+
+# Documentation (optional, can include if needed)
+# *.md
+
+# Temporary files
+*.tmp
+*.bak
+*.log
+
