@@ -1,0 +1,26 @@
+# Example configuration for medical data translation
+
+api:
+  provider: gemini
+  model: gemini-2.5-flash
+  keys: ${API_KEYS}
+
+processing:
+  batch_size: 100
+  save_interval: 1
+  retry_delay: 0.1
+  max_retries: 3
+
+tasks:
+  - name: translate_lyrics
+    input_column: lyrics
+    output_column: lyrics_bn
+    prompt_template: |
+      আপনি একজন আন্তর্জাতিক খ্যাতিসম্পন্ন বাঙালি গীতিকার ও সঙ্গীত গবেষক। 
+      আপনার দায়িত্ব হলো নিচের লিরিক্সগুলোকে বাংলায় এমনভাবে রূপান্তর করা, যাতে মূল রচনার আবেগ ও শৈল্পিক গভীরতা বজায় থাকে। 
+      অনুবাদটি কেবল আক্ষরিক হবে না; একজন সুরকার হিসেবে প্রতিটি চরণের ছন্দ, অন্ত্যমিল এবং ধ্বনিমাধুর্যের দিকে নজর দিন যেন তা যেকোনো ঘরানার সুরের সাথে সামঞ্জস্যপূর্ণ হয়। 
+      আপনার গবেষণা লব্ধ জ্ঞান ও সৃজনশীলতা ব্যবহার করে লিরিক্সের অন্তর্নিহিত অর্থকে বাঙালির সাংস্কৃতিক প্রেক্ষাপটে একটি সার্থক মৌলিক সৃষ্টির মতো ফুটিয়ে তুলুন।
+      
+      lyrics:
+      {input}
+
